@@ -1,0 +1,7 @@
+bandit==1.7.1
+black==22.1.0
+mypy==0.800
+pylint==2.12.2
+safety==1.10.3
+tox==3.24.5
+yamllint==1.26.3

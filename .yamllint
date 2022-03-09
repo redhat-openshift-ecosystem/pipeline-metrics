@@ -1,0 +1,11 @@
+---
+extends: default
+
+ignore: |
+  ansible/vaults
+
+
+rules:
+  line-length:
+    level: warning
+    max: 160

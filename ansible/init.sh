@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Creates service account for each pipeline-metrics env; updates secret-vars.yaml with token
+#
+# As arguments, it expects environments for which the sa should be created
+#
+# ./init.sh prod
+#       creates the sa for prod environments
+# ./init.sh
+#       creates the sa for every environment (prod, non-prod)
+
+set -euo pipefail
+umask 077
+
+PARAMS="$*"
+
+# parse arguments given to the script
+get_environments() {
+    if [ -z "$PARAMS" ]; then
+        echo "non-prod prod"
+    else
+        echo "$PARAMS"
+    fi
+}
+
+# execute playbook for given environment
+execute_playbook() {
+    local secret=$(dirname "$0")/vaults/$env/secret-vars.yaml
+    if [ ! -f $secret ]; then
+        touch $secret
+        echo "File $secret was not found, empty one was created"
+    fi
+
+    ansible-playbook -i inventory/pipeline-metrics playbooks/deploy.yaml \
+        --vault-password-file=$2 \
+        -e "env=$1" \
+        -e "ocp_host=`oc whoami --show-server`" \
+        -e "ocp_token=`oc whoami -t`" \
+        --tags init \
+        -vvvv
+}
+
+# update token for given environment
+update_token() {
+    local token=$(oc --namespace pipeline-metrics-$1 serviceaccounts get-token pipeline-metrics-admin)
+    local secret=$(dirname "$0")/vaults/$env/secret-vars.yaml
+
+    echo "ocp_token: $token" > $secret
+    ansible-vault encrypt $secret --vault-password-file $2 > /dev/null
+    echo "Secret file $secret was updated and encrypted"
+
+}
+
+main() {
+
+    local environments=$(get_environments)
+    local passwd_file=./vault-password
+
+    # Executes the playbook for each env
+    for env in $environments;
+    do
+        execute_playbook $env $passwd_file
+    done
+
+    # Asks if the script should update the secret-vars.yaml files
+    read -p "Service accounts configured for ($environments). Update secret-vars with tokens? [y/N] " -n 1 -r
+    echo
+
+    # Updates the secret-vars.yaml files
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        for env in $environments; do
+            update_token $env $passwd_file
+        done
+    fi
+}
+
+main

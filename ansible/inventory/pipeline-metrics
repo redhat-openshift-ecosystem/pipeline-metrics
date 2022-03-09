@@ -1,0 +1,9 @@
+[pipeline-metrics:children]
+pipeline-metrics-nonprod
+pipeline-metrics-prod
+
+[pipeline-metrics-nonprod]
+pipeline-metrics-nonprod-project ansible_connection=local
+
+[pipeline-metrics-prod]
+pipeline-metrics-prod-project ansible_connection=local

@@ -1,0 +1,5 @@
+---
+env: nonprod
+ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
+
+pipeline_metrics_name_url: "{{ pipeline_metrics_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"

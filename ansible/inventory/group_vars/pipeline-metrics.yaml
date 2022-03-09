@@ -1,0 +1,13 @@
+---
+env: unset
+suffix: none
+pipeline_metrics_name: pipeline-metrics
+oc_namespace: "{{ pipeline_metrics_name }}-{{ env }}"
+service_account_name: "{{ pipeline_metrics_name }}-admin"
+
+pipeline_metrics_image_repo: quay.io/redhat-isv/pipeline-metrics
+pipeline_metrics_image_tag: latest
+pipeline_metrics_image_pull_spec: "{{ pipeline_metrics_image_repo }}:{{ pipeline_metrics_image_tag }}"
+
+pipeline_metrics_name_replicas: 1
+pipeline_metrics_name_port: 8080

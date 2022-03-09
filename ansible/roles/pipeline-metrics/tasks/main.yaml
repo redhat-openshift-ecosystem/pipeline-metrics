@@ -1,0 +1,71 @@
+---
+- name: Creates and init service accounts
+  block:
+    - name: Create service account
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: "{{ service_account_name }}"
+
+    - name: Grant ansible service account admin access
+      k8s:
+        state: present
+        namespace: "{{ oc_namespace }}"
+        definition:
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: RoleBinding
+          metadata:
+            name: "{{ service_account_name }}"
+          roleRef:
+            kind: ClusterRole
+            name: admin
+          subjects:
+            - kind: ServiceAccount
+              name: "{{ service_account_name }}"
+
+  tags:
+    - init
+
+- name: Deploy pipeline metrics
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipeline-metrics-deployment.yaml
+
+- name: Create service
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipeline-metrics-service.yaml
+
+- name: Create route
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipeline-metrics-route.yaml
+
+- name: Remove previous deployments
+  loop:
+    - DeploymentConfig
+    - Secret
+    - ConfigMap
+  vars:
+    object_kind: '{{ item }}'
+    label_selectors:
+      - app={{ pipeline_metrics_name }}
+      - env={{ env }}
+      - suffix!={{ suffix }}
+  include_tasks: remove-objects.yml

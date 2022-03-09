@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ pipeline_metrics_name }}"
+  labels:
+    app: "{{ pipeline_metrics_name }}"
+    env: "{{ env }}"
+    suffix: "{{ suffix }}"
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ pipeline_metrics_name_port | int }}  # yamllint disable-line rule:braces
+  selector:
+    app: "{{ pipeline_metrics_name }}"
+    env: "{{ env }}"
+    suffix: "{{ suffix }}"

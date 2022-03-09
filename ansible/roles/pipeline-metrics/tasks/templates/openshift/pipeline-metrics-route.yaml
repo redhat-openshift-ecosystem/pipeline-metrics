@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Route
+metadata:
+  name: "{{ pipeline_metrics_name }}"
+  labels:
+    app: "{{ pipeline_metrics_name }}"
+    env: "{{ env }}"
+spec:
+  host: "{{ pipeline_metrics_name_url }}"
+  to:
+    kind: Service
+    name: "{{ pipeline_metrics_name }}"
+  port:
+    targetPort: http
+  tls:
+    termination: edge
