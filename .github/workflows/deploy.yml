@@ -21,7 +21,7 @@ jobs:
     environment:
       name: nonprod
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           echo "$SHORT_SHA"
@@ -46,7 +46,7 @@ jobs:
     environment:
       name: prod
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           pip install --user openshift
@@ -68,7 +68,7 @@ jobs:
     needs:
       - deploy-prod
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Bump version and push tag
         id: tag_version

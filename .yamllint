@@ -1,9 +1,10 @@
 ---
 extends: default
 
-ignore: |
-  ansible/vaults
-
+ignore:
+  - .tox/
+  - ansible/vaults/
+  - .venv
 
 rules:
   line-length:
