@@ -2,6 +2,7 @@
 Tekton metrics service that gathers and expose Prometheus metrics.
 """
 from typing import Any
+import os
 
 from flask import Flask, jsonify, request
 from prometheus_client import Counter, Histogram, make_wsgi_app
@@ -79,9 +80,7 @@ def init_metrics() -> Any:
     app.add_url_rule("/ping", view_func=ping)
 
     # Makes Prometheus metrics available on /metrics endpoint
-    app.wsgi_app = DispatcherMiddleware(  # type: ignore
-        app.wsgi_app, {"/metrics": make_wsgi_app()}
-    )
+    app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
 
     return app
 
@@ -91,7 +90,7 @@ def main() -> None:
     Main function
     """
     init_metrics()
-    app.run(port=8080, host="0.0.0.0", debug=True)
+    app.run(port=8080, host="0.0.0.0", debug=os.environ.get("DEBUG", False))  # nosec
 
 
 if __name__ == "__main__":

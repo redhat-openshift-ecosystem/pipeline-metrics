@@ -82,11 +82,7 @@ class PipelineRun:
         Returns:
             str: Pipeline overall status based on status of individual tasks
         """
-        for task_run in self.data.get("status", {}).get("taskRuns", {}).values():
-            conditions = task_run.get("status", {}).get("conditions")
-            if not conditions:
-                continue
-            status = conditions[0]["status"]
-            if status == "False":
-                return "failed"
-        return "success"
+        conditions = self.data.get("status", {}).get("conditions", [])
+        if not conditions:
+            return "unknown"
+        return "success" if conditions[0]["status"] == "True" else "failed"
