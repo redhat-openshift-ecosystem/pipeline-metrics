@@ -6,7 +6,7 @@ on:  # yamllint disable-line rule:truthy
     workflows:
       - Build
     branches:
-      - ISV-1691
+      - main
     types:
       - completed
   # push:
