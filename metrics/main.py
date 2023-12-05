@@ -66,6 +66,7 @@ def process_pipelinerun() -> Any:
             "pipeline": pipelinerun.pipeline_name,
             "pipelinerun_name": pipelinerun.pipelinerun_name,
             "duration": duration,
+            "namespace": pipelinerun.namespace,
         }
     )
 
