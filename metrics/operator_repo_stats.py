@@ -18,7 +18,7 @@ from metrics.prometheus_metrics import (
 CLONE_DIR = Path("/tmp")  # nosec
 OPERATORS_DIR_NAME = "operators"
 CI_FILE_NAME = "ci.yaml"
-SYNC_DELAY = 20  # 24 h in seconds
+SYNC_DELAY = 86400  # 24 h in seconds
 
 
 def ensure_repo(repo: Path, git_url: str) -> None:
