@@ -1,0 +1,5 @@
+---
+# This file is for local development only
+certified: "https://github.com/redhat-openshift-ecosystem/certified-operators.git"
+marketplace: "https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators.git"
+community: "https://github.com/redhat-openshift-ecosystem/community-operators-prod.git"

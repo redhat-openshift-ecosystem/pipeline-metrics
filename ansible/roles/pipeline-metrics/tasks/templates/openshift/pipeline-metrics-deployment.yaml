@@ -21,12 +21,23 @@ spec:
         suffix: "{{ suffix }}"
       name: "{{ pipeline_metrics_name }}-{{ suffix }}"
     spec:
+      volumes:
+        - name: operator-repos-config
+          secret:
+            secretName: "operator-repos-{{ suffix }}"
       containers:
         - name: "{{ pipeline_metrics_name }}"
           image: "{{ pipeline_metrics_image_pull_spec }}"
           ports:
             - containerPort: {{ pipeline_metrics_name_port | int }}  # yamllint disable-line rule:braces
               protocol: TCP
+          volumeMounts:
+            - name: operator-repos-config
+              mountPath: /etc/metrics-conf/
+              readOnly: true
+          env:
+            - name: METRICS_OPERATOR_REPOS_CFG_PATH
+              value: /etc/metrics-conf/repos.yml
           livenessProbe:
             failureThreshold: 3
             httpGet:
