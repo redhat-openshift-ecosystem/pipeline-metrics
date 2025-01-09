@@ -1,5 +1,5 @@
 ---
-kind: Secret
+kind: ConfigMap
 apiVersion: v1
 metadata:
   labels:
@@ -8,6 +8,4 @@ metadata:
     suffix: "{{ suffix }}"
   name: "operator-repos-{{ suffix }}"
 data:
-  repos.yml: "{{ pipeline_metrics_operator_repos | b64encode }}"
-  # This technically creates a secret containing a JSON file
-  # but YAML fully supports JSON
+  repos.yml: "{{ pipeline_metrics_operator_repos | to_yaml }}"

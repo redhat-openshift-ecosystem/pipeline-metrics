@@ -6,6 +6,7 @@ import subprocess
 from threading import Thread, Event
 
 import yaml
+from operator_repo import Repo
 
 from metrics.prometheus_metrics import (
     MIGRATION_GAUGE,
@@ -16,8 +17,6 @@ from metrics.prometheus_metrics import (
 
 
 CLONE_DIR = Path("/tmp")  # nosec
-OPERATORS_DIR_NAME = "operators"
-CI_FILE_NAME = "ci.yaml"
 SYNC_DELAY = 86400  # 24 h in seconds
 
 
@@ -25,8 +24,9 @@ def ensure_repo(repo: Path, git_url: str) -> None:
     """Ensure a local repository exists and is up to date."""
     if repo.exists():
         pop = subprocess.Popen(
-            ["cd", repo.absolute(), ";", "git", "pull"], shell=True
-        )  # nosec
+            ["git", "pull"],
+            cwd=repo.absolute(),
+        )
     else:
         # pylint: disable=consider-using-with
         pop = subprocess.Popen(["git", "clone", git_url, repo])
@@ -43,33 +43,23 @@ def load_configured_repos(config_path: Path | str = "repos.yml") -> dict[str, st
 
 def parse_stats(repo: Path) -> None:
     """Parses stats for a single operator repository."""
-    operators_dir = repo / OPERATORS_DIR_NAME
-    if operators_dir.exists() and operators_dir.is_dir():
-        num_of_operators = 0
-        migrated_operators = 0
-        for operator in operators_dir.iterdir():
-            if not operator.is_dir():
-                # The directory can also contain files like README
-                continue
-            ci_file = operator / CI_FILE_NAME
-            if not ci_file.exists():
-                continue
-            # This is an operator
-            num_of_operators += 1
-            # Update number of bundles
-            BUNDLES_IN_REPO_GAUGE.labels(
-                repository=repo.name, operator=operator.name
-            ).set(len([x for x in operator.iterdir() if x.is_dir()]))
-            # Update FBC status
-            with open(ci_file, "r", encoding="utf-8") as read_file:
-                data = yaml.safe_load(read_file)
-                is_migrated: bool = bool(data.get("fbc", {}).get("enabled", False))
-                migrated_operators += is_migrated
-                MIGRATION_GAUGE.labels(
-                    repository=repo.name, operator=operator.name
-                ).set(int(is_migrated))
-        OPERATORS_IN_REPO_GAUGE.labels(repository=repo.name).set(num_of_operators)
-        MIGRATION_COUNT_GAUGE.labels(repository=repo.name).set(migrated_operators)
+    parsed_repo = Repo(repo)
+    num_of_operators = 0
+    migrated_operators = 0
+    for operator in parsed_repo.all_operators():
+        num_of_operators += 1
+        if ci_content := operator.config:
+            # We can check if this operator is migrated to FBC
+            is_migrated = bool(ci_content.get("fbc", {}).get("enabled", False))
+            migrated_operators += is_migrated
+            MIGRATION_GAUGE.labels(
+                repository=repo.name, operator=operator.operator_name
+            ).set(int(is_migrated))
+        BUNDLES_IN_REPO_GAUGE.labels(
+            repository=repo.name, operator=operator.operator_name
+        ).set(len(list(operator.all_bundles())))
+    MIGRATION_COUNT_GAUGE.labels(repository=repo.name).set(migrated_operators)
+    OPERATORS_IN_REPO_GAUGE.labels(repository=repo.name).set(num_of_operators)
 
 
 class Scraper(Thread):

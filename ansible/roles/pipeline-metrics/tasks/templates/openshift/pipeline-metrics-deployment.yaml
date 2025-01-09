@@ -23,8 +23,8 @@ spec:
     spec:
       volumes:
         - name: operator-repos-config
-          secret:
-            secretName: "operator-repos-{{ suffix }}"
+          configMap:
+            name: "operator-repos-{{ suffix }}"
       containers:
         - name: "{{ pipeline_metrics_name }}"
           image: "{{ pipeline_metrics_image_pull_spec }}"

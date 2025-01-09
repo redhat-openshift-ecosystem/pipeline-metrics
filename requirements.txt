@@ -3,3 +3,4 @@ prometheus-client==0.17.1
 python-dateutil==2.8.2
 pytz==2023.3.post1
 PyYAML==6.0.2
+operator-repo @ git+https://github.com/mporrato/operator-repo@v0.4.11

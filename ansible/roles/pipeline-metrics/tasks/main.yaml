@@ -30,7 +30,7 @@
   tags:
     - init
 
-- name: Create secrets
+- name: Create configmaps
   k8s:
     state: present
     apply: true
