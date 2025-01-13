@@ -8,4 +8,5 @@ metadata:
     suffix: "{{ suffix }}"
   name: "operator-repos-{{ suffix }}"
 data:
-  repos.yml: "{{ pipeline_metrics_operator_repos | to_yaml }}"
+  repos.yml: |
+    {{ pipeline_metrics_operator_repos | to_json }}

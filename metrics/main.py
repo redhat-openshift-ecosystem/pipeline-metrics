@@ -93,10 +93,12 @@ def main() -> None:
     init_metrics()
     stop_event = Event()
     threads = []
-    for repo_name, repo_url in load_configured_repos(
+    for repo_name, repo_spec in load_configured_repos(
         os.environ.get("METRICS_OPERATOR_REPOS_CFG_PATH", "repos.yml")
     ).items():
-        thread = Scraper(CLONE_DIR / repo_name, repo_url, stop_event)
+        repo_url = repo_spec["url"]
+        repo_branch = repo_spec.get("branch")
+        thread = Scraper(CLONE_DIR / repo_name, repo_url, stop_event, repo_branch)
         thread.start()
         threads.append(thread)
     app.run(port=8080, host="0.0.0.0", debug=os.environ.get("DEBUG", False))  # nosec

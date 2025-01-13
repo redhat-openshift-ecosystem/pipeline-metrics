@@ -20,24 +20,34 @@ CLONE_DIR = Path("/tmp")  # nosec
 SYNC_DELAY = 86400  # 24 h in seconds
 
 
-def ensure_repo(repo: Path, git_url: str) -> None:
+def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     """Ensure a local repository exists and is up to date."""
+    # pylint: disable=consider-using-with
     if repo.exists():
         pop = subprocess.Popen(
             ["git", "pull"],
             cwd=repo.absolute(),
         )
+        if branch:
+            pop.wait()
+            pop = subprocess.Popen(["git", "switch", branch], cwd=repo.absolute())
     else:
-        # pylint: disable=consider-using-with
-        pop = subprocess.Popen(["git", "clone", git_url, repo])
-        # pylint: enable=consider-using-with
+        command: list[str | Path] = ["git", "clone", git_url, repo.absolute()]
+        if branch:
+            command = ["git", "clone", "--branch", branch, git_url, repo.absolute()]
+        pop = subprocess.Popen(command)
     pop.wait()
 
+    pop.wait()
+    # pylint: enable=consider-using-with
 
-def load_configured_repos(config_path: Path | str = "repos.yml") -> dict[str, str]:
+
+def load_configured_repos(
+    config_path: Path | str = "repos.yml",
+) -> dict[str, dict[str, str]]:
     """Load config file with repository names and remotes."""
     with open(config_path, "r", encoding="utf-8") as i_file:
-        data: dict[str, str] = yaml.safe_load(i_file)
+        data: dict[str, dict[str, str]] = yaml.safe_load(i_file)
         return data
 
 
@@ -65,10 +75,17 @@ def parse_stats(repo: Path) -> None:
 class Scraper(Thread):
     """Class for a scraping worker."""
 
-    def __init__(self, repo: Path, repo_url: str, stop_event: Event):
+    def __init__(
+        self,
+        repo: Path,
+        repo_url: str,
+        stop_event: Event,
+        repo_branch: str | None = None,
+    ):
         super().__init__()
         self.repo = repo
         self.repo_url = repo_url
+        self.repo_branch = repo_branch
         self.stop_event = stop_event
 
     def run(self) -> None:
