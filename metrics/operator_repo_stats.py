@@ -22,24 +22,19 @@ SYNC_DELAY = 86400  # 24 h in seconds
 
 def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     """Ensure a local repository exists and is up to date."""
-    # pylint: disable=consider-using-with
     if repo.exists():
-        pop = subprocess.Popen(
+        subprocess.run(
             ["git", "pull"],
             cwd=repo.absolute(),
+            check=True,
         )
         if branch:
-            pop.wait()
-            pop = subprocess.Popen(["git", "switch", branch], cwd=repo.absolute())
+            subprocess.run(["git", "switch", branch], cwd=repo.absolute(), check=True)
     else:
         command: list[str | Path] = ["git", "clone", git_url, repo.absolute()]
         if branch:
             command = ["git", "clone", "--branch", branch, git_url, repo.absolute()]
-        pop = subprocess.Popen(command)
-    pop.wait()
-
-    pop.wait()
-    # pylint: enable=consider-using-with
+        subprocess.run(command, check=True)
 
 
 def load_configured_repos(
@@ -61,7 +56,7 @@ def parse_stats(repo: Path) -> None:
         if ci_content := operator.config:
             # We can check if this operator is migrated to FBC
             is_migrated = bool(ci_content.get("fbc", {}).get("enabled", False))
-            migrated_operators += is_migrated
+            migrated_operators += int(is_migrated)
             MIGRATION_GAUGE.labels(
                 repository=repo.name, operator=operator.operator_name
             ).set(int(is_migrated))
