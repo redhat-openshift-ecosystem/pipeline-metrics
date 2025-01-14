@@ -3,3 +3,23 @@ env: nonprod
 ocp_host: https://api.pipelines-stage.0ce8.p1.openshiftapps.com:6443
 
 pipeline_metrics_name_url: "{{ pipeline_metrics_name }}-{{ env }}.apps.pipelines-stage.0ce8.p1.openshiftapps.com"
+
+pipeline_metrics_operator_repos:
+  certified-stage:
+    url: "https://github.com/redhat-openshift-ecosystem/certified-operators-preprod.git"
+    branch: stage
+  certified-qa:
+    url: "https://github.com/redhat-openshift-ecosystem/certified-operators-preprod.git"
+    branch: qa
+  marketplace-stage:
+    url: "https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod.git"
+    branch: stage
+  marketplace-qa:
+    url: "https://github.com/redhat-openshift-ecosystem/redhat-marketplace-operators-preprod.git"
+    branch: qa
+  community-stage:
+    url: "https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod.git"
+    branch: stage
+  community-qa:
+    url: "https://github.com/redhat-openshift-ecosystem/community-operators-pipeline-preprod.git"
+    branch: qa

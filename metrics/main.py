@@ -1,30 +1,24 @@
 """
 Tekton metrics service that gathers and expose Prometheus metrics.
 """
+
+import sys
+from threading import Event
 from typing import Any
 import os
+import logging
 
 from flask import Flask, jsonify, request
-from prometheus_client import Counter, Histogram, make_wsgi_app
+from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
+from metrics.operator_repo_stats import CLONE_DIR, load_configured_repos
+
+from metrics.operator_repo_stats import Scraper
+from metrics.prometheus_metrics import PIPELINERUN_COUNTER, PIPELINERUN_HISTOGRAM
 from metrics.tekton import PipelineRun
 
 app = Flask(__name__)
-
-# Prometheus metrics
-PIPELINERUN_COUNTER = Counter(
-    "isv_pipelinerun_counter",
-    "ISV pipeline run counter.",
-    ["pipeline", "status", "namespace"],
-)
-
-PIPELINERUN_HISTOGRAM = Histogram(
-    "isv_pipelinerun_duration_seconds",
-    "ISV pipeline duration histogram",
-    ["pipeline", "status", "namespace"],
-    buckets=(60, 5 * 60, 10 * 60, 20 * 60, 40 * 60, 50 * 60, 60 * 60),
-)
 
 
 @app.route("/ping", methods=["GET"])
@@ -38,7 +32,7 @@ def ping() -> str:
 @app.route("/v1/metrics/pipelinerun", methods=["POST"])
 def process_pipelinerun() -> Any:
     """
-    Get a Tenton pipeline run summary and update Prometherus statistics
+    Get a Tekton pipeline run summary and update Prometheus statistics
 
     Returns:
         Any: Response with metrics details
@@ -90,8 +84,28 @@ def main() -> None:
     """
     Main function
     """
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    root_logger = logging.getLogger("metrics")
+    root_logger.addHandler(handler)
+    root_logger.setLevel(logging.INFO)
+
     init_metrics()
+    stop_event = Event()
+    threads = []
+    for repo_name, repo_spec in load_configured_repos(
+        os.environ.get("METRICS_OPERATOR_REPOS_CFG_PATH", "repos.yml")
+    ).items():
+        repo_url = repo_spec["url"]
+        repo_branch = repo_spec.get("branch")
+        thread = Scraper(CLONE_DIR / repo_name, repo_url, stop_event, repo_branch)
+        thread.start()
+        threads.append(thread)
     app.run(port=8080, host="0.0.0.0", debug=os.environ.get("DEBUG", False))  # nosec
+    # Gracefully stop threads
+    stop_event.set()
+    for thread in threads:
+        thread.join()
 
 
 if __name__ == "__main__":

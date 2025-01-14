@@ -30,6 +30,15 @@
   tags:
     - init
 
+- name: Create configmaps
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipeline-metrics-operator-repos.yaml
+
 - name: Deploy pipeline metrics
   k8s:
     state: present
