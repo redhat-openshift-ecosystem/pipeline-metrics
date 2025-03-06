@@ -6,7 +6,7 @@ import subprocess
 from threading import Thread, Event
 
 import yaml
-from operator_repo import Repo
+from operatorcert.operator_repo import Repo
 
 from metrics.prometheus_metrics import (
     MIGRATION_GAUGE,

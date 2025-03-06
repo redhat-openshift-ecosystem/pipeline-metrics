@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:38
+FROM quay.io/fedora/fedora:41
 
 LABEL description="Tekton metrics collector"
 LABEL summary="A service that collects a metrics form Tekton pipelines."
@@ -11,6 +11,8 @@ RUN dnf update -y && \
     dnf install -y \
     gcc \
     git \
+    krb5-devel \
+    krb5-workstation \
     openssl-devel \
     pip \
     python3-devel && \
@@ -22,8 +24,8 @@ WORKDIR /home/user
 COPY requirements.txt setup.py ./
 COPY ./metrics ./metrics
 
-RUN pip3 install -r requirements.txt
-RUN python3 setup.py install -O1 --skip-build
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    python3 setup.py install -O1 --skip-build
 
 
 USER "${USER_UID}"
