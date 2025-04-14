@@ -24,16 +24,30 @@ def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     """Ensure a local repository exists and is up to date."""
     if repo.exists():
         subprocess.run(
-            ["git", "pull"],
+            ["git", "pull", "--depth=1"],
             cwd=repo.absolute(),
             check=True,
         )
         if branch:
             subprocess.run(["git", "switch", branch], cwd=repo.absolute(), check=True)
     else:
-        command: list[str | Path] = ["git", "clone", git_url, repo.absolute()]
+        command: list[str | Path] = [
+            "git",
+            "clone",
+            "--depth=1",
+            git_url,
+            repo.absolute(),
+        ]
         if branch:
-            command = ["git", "clone", "--branch", branch, git_url, repo.absolute()]
+            command = [
+                "git",
+                "clone",
+                "--depth=1",
+                "--branch",
+                branch,
+                git_url,
+                repo.absolute(),
+            ]
         subprocess.run(command, check=True)
 
 
