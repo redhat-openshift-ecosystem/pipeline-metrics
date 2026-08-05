@@ -15,7 +15,6 @@ from metrics.prometheus_metrics import (
     MIGRATION_COUNT_GAUGE,
 )
 
-
 CLONE_DIR = Path("/tmp")  # nosec
 SYNC_DELAY = 86400  # 24 h in seconds
 
