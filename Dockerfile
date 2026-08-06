@@ -21,7 +21,7 @@ RUN dnf update -y && \
 RUN useradd -ms /bin/bash -u "${USER_UID}" user
 WORKDIR /home/user
 
-COPY requirements.txt setup.py ./
+COPY requirements.txt setup.py gunicorn.conf.py ./
 COPY ./metrics ./metrics
 
 RUN pip3 install --no-cache-dir -r requirements.txt && \
@@ -30,4 +30,4 @@ RUN pip3 install --no-cache-dir -r requirements.txt && \
 
 USER "${USER_UID}"
 
-ENTRYPOINT [ "metrics" ]
+ENTRYPOINT [ "gunicorn", "-c", "gunicorn.conf.py", "metrics.main:app" ]
