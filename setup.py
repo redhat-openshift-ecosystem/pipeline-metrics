@@ -11,9 +11,5 @@ setup(
     url="https://gitlab.cee.redhat.com/isv/mercury/mercury/",
     package_dir={"": "."},
     packages=find_packages(".", exclude=("tests",)),
-    entry_points={
-        "console_scripts": [
-            "metrics=metrics.main:main",
-        ]
-    },
+    entry_points={},
 )

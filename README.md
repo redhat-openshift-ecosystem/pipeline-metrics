@@ -20,16 +20,6 @@ podman build -t pipeline-metrics .
 podman run -p 8080:8080 -v ./repos.yml:/home/user/repos.yml:Z pipeline-metrics
 ```
 
-### Run without container
-
-```bash
-python3.13 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python setup.py install
-metrics  # starts Flask dev server with scrapers
-```
-
 ### Verify
 
 ```bash
