@@ -1,5 +1,6 @@
 """Module for parsing operator repositories into useful metrics."""
 
+import logging
 import shutil
 import time
 from pathlib import Path
@@ -16,6 +17,8 @@ from metrics.prometheus_metrics import (
     MIGRATION_COUNT_GAUGE,
 )
 
+LOGGER = logging.getLogger("metrics")
+
 CLONE_DIR = Path("/tmp")  # nosec
 SYNC_DELAY = 86400  # 24 h in seconds
 
@@ -25,6 +28,7 @@ def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     if repo.exists():
         shutil.rmtree(repo)
 
+    LOGGER.info("Cloning %s...", repo.name)
     command: list[str | Path] = ["git", "clone", "--depth=1"]
     if branch:
         command.extend(["--branch", branch])
@@ -32,7 +36,14 @@ def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     # check=False: some repos contain OCI whiteout files (.wh..wh..opq)
     # that can't be created on overlay filesystems - git exits non-zero
     # even though the rest of the checkout is complete and usable.
-    subprocess.run(command, check=False)
+    result = subprocess.run(command, check=False, capture_output=True)
+    if result.returncode != 0:
+        LOGGER.warning(
+            "git clone for %s exited with %d: %s",
+            repo.name,
+            result.returncode,
+            result.stderr.decode().strip(),
+        )
 
 
 def load_configured_repos(
@@ -89,5 +100,6 @@ class Scraper(Thread):
             if not tick % SYNC_DELAY:
                 ensure_repo(self.repo, self.repo_url, self.repo_branch)
                 parse_stats(self.repo)
+                LOGGER.info("Finished scraping %s", self.repo.name)
             tick += 1
             time.sleep(1)
