@@ -1,5 +1,7 @@
 """Module for parsing operator repositories into useful metrics."""
 
+import logging
+import shutil
 import time
 from pathlib import Path
 import subprocess
@@ -15,6 +17,7 @@ from metrics.prometheus_metrics import (
     MIGRATION_COUNT_GAUGE,
 )
 
+LOGGER = logging.getLogger("metrics")
 
 CLONE_DIR = Path("/tmp")  # nosec
 SYNC_DELAY = 86400  # 24 h in seconds
@@ -23,32 +26,24 @@ SYNC_DELAY = 86400  # 24 h in seconds
 def ensure_repo(repo: Path, git_url: str, branch: str | None = None) -> None:
     """Ensure a local repository exists and is up to date."""
     if repo.exists():
-        subprocess.run(
-            ["git", "pull", "--depth=1"],
-            cwd=repo.absolute(),
-            check=True,
+        shutil.rmtree(repo)
+
+    LOGGER.info("Cloning %s...", repo.name)
+    command: list[str | Path] = ["git", "clone", "--depth=1"]
+    if branch:
+        command.extend(["--branch", branch])
+    command.extend([git_url, repo.absolute()])
+    # check=False: some repos contain OCI whiteout files (.wh..wh..opq)
+    # that can't be created on overlay filesystems - git exits non-zero
+    # even though the rest of the checkout is complete and usable.
+    result = subprocess.run(command, check=False, capture_output=True)
+    if result.returncode != 0:
+        LOGGER.warning(
+            "git clone for %s exited with %d: %s",
+            repo.name,
+            result.returncode,
+            result.stderr.decode().strip(),
         )
-        if branch:
-            subprocess.run(["git", "switch", branch], cwd=repo.absolute(), check=True)
-    else:
-        command: list[str | Path] = [
-            "git",
-            "clone",
-            "--depth=1",
-            git_url,
-            repo.absolute(),
-        ]
-        if branch:
-            command = [
-                "git",
-                "clone",
-                "--depth=1",
-                "--branch",
-                branch,
-                git_url,
-                repo.absolute(),
-            ]
-        subprocess.run(command, check=True)
 
 
 def load_configured_repos(
@@ -103,7 +98,8 @@ class Scraper(Thread):
             # This way thread can be interrupted every second
             # but updates data only when delay interval is reached
             if not tick % SYNC_DELAY:
-                ensure_repo(self.repo, self.repo_url)
+                ensure_repo(self.repo, self.repo_url, self.repo_branch)
                 parse_stats(self.repo)
+                LOGGER.info("Finished scraping %s", self.repo.name)
             tick += 1
             time.sleep(1)
