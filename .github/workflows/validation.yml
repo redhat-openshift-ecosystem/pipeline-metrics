@@ -13,9 +13,9 @@ jobs:
     name: Run unit tests and linters
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - uses: fedora-python/tox-github-action@v39.0
+      - uses: fedora-python/tox-github-action@c25c758f96dfb07b749a1034846f449166fd4979  # v43.0
         with:
           tox_env: mypy,black,pylint,yamllint,bandit,pip-audit
           dnf_install: krb5-devel
