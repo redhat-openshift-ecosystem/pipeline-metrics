@@ -7,11 +7,17 @@ metadata:
     app: "{{ pipeline_metrics_name }}"
     env: "{{ env }}"
     suffix: "{{ suffix }}"
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: "{{ pipeline_metrics_tls_secret_name }}"
 spec:
   ports:
+    # HTTP port exposed by Service, but not by Route. Internal only.
     - name: http
       port: 80
       targetPort: {{ pipeline_metrics_name_port | int }}  # yamllint disable-line rule:braces
+    - name: https
+      port: 443
+      targetPort: {{ pipeline_metrics_oauth_proxy_port | int }}  # yamllint disable-line rule:braces
   selector:
     app: "{{ pipeline_metrics_name }}"
     env: "{{ env }}"

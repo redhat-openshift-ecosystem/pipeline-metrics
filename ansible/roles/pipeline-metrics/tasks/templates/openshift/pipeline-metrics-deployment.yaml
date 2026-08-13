@@ -21,10 +21,17 @@ spec:
         suffix: "{{ suffix }}"
       name: "{{ pipeline_metrics_name }}-{{ suffix }}"
     spec:
+      serviceAccountName: "{{ service_account_name }}"
       volumes:
         - name: operator-repos-config
           configMap:
             name: "operator-repos-{{ suffix }}"
+        - name: proxy-tls
+          secret:
+            secretName: "{{ pipeline_metrics_tls_secret_name }}"
+        - name: cookie-secret
+          secret:
+            secretName: "{{ pipeline_metrics_cookie_secret_name }}"
       containers:
         - name: "{{ pipeline_metrics_name }}"
           image: "{{ pipeline_metrics_image_pull_spec }}"
@@ -60,3 +67,34 @@ spec:
             limits:
               cpu: 500m
               memory: 1Gi
+        - name: oauth-proxy
+          image: "{{ pipeline_metrics_oauth_proxy_image }}"
+          ports:
+            - containerPort: {{ pipeline_metrics_oauth_proxy_port | int }}  # yamllint disable-line rule:braces
+              name: https
+              protocol: TCP
+          args:
+            - --https-address=:{{ pipeline_metrics_oauth_proxy_port }}
+            - --provider=openshift
+            - --openshift-service-account={{ service_account_name }}
+            - --upstream=http://localhost:{{ pipeline_metrics_name_port }}
+            - --tls-cert=/etc/tls/private/tls.crt
+            - --tls-key=/etc/tls/private/tls.key
+            - --cookie-secret-file=/etc/oauth-cookie/cookie-secret
+            - --redirect-url=https://{{ pipeline_metrics_name_url }}/oauth/callback
+            - --skip-provider-button
+            - --pass-basic-auth=false
+          volumeMounts:
+            - name: proxy-tls
+              mountPath: /etc/tls/private
+              readOnly: true
+            - name: cookie-secret
+              mountPath: /etc/oauth-cookie
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

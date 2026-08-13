@@ -11,3 +11,11 @@ pipeline_metrics_image_pull_spec: "{{ pipeline_metrics_image_repo }}:{{ pipeline
 
 pipeline_metrics_name_replicas: 1
 pipeline_metrics_name_port: 8080
+
+pipeline_metrics_oauth_proxy_image: "registry.redhat.io/openshift4/ose-oauth-proxy-rhel9:latest"
+pipeline_metrics_oauth_proxy_port: 8443
+pipeline_metrics_tls_secret_name: "{{ pipeline_metrics_name }}-tls"
+pipeline_metrics_cookie_secret_name: "{{ pipeline_metrics_name }}-oauth-cookie"
+pipeline_metrics_allowed_namespaces:
+  - "openshift-user-workload-monitoring"
+  - "pipelinerun-listener"
