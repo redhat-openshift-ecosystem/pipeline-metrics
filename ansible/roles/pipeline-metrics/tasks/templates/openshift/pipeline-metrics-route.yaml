@@ -12,6 +12,6 @@ spec:
     kind: Service
     name: "{{ pipeline_metrics_name }}"
   port:
-    targetPort: http
+    targetPort: https
   tls:
-    termination: edge
+    termination: reencrypt

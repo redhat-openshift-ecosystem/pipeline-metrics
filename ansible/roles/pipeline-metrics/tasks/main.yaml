@@ -10,6 +10,8 @@
           kind: ServiceAccount
           metadata:
             name: "{{ service_account_name }}"
+            annotations:
+              serviceaccounts.openshift.io/oauth-redirecturi.metrics: "https://{{ pipeline_metrics_name_url }}/oauth/callback"
 
     - name: Grant ansible service account admin access
       k8s:
@@ -29,6 +31,15 @@
 
   tags:
     - init
+
+- name: Create secrets
+  k8s:
+    state: present
+    apply: true
+    namespace: "{{ oc_namespace }}"
+    definition: "{{ lookup('template', '{{ item }}') }}"
+  with_items:
+    - ../templates/openshift/pipeline-metrics-oauth-cookie-secret.yaml
 
 - name: Create configmaps
   k8s:
