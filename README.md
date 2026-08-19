@@ -30,6 +30,6 @@ curl http://localhost:8080/metrics
 ## Quality gates
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e '.[dev]'
 tox  # mypy, black, pylint, yamllint, bandit, pip-audit
 ```

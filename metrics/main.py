@@ -31,9 +31,19 @@ def process_pipelinerun() -> Any:
         Any: Response with metrics details
     """
     data = request.get_json()
-    pipelinerun = PipelineRun(data)
+    pipelinerun = PipelineRun.model_validate(data)
     duration = pipelinerun.duration
     status = pipelinerun.status
+    namespace = pipelinerun.namespace
+    if namespace not in {"operator-pipeline-stage", "operator-pipeline-prod"}:
+        return jsonify({"metrics": "discarded", "reason": "namespace ignored"}), 202
+    pipeline_name = pipelinerun.pipeline_name
+    if pipeline_name not in {
+        "operator-ci-pipeline",
+        "operator-hosted-pipeline",
+        "operator-release-pipeline",
+    }:
+        return jsonify({"metrics": "discarded", "reason": "pipeline name ignored"}), 202
 
     PIPELINERUN_COUNTER.labels(
         namespace=pipelinerun.namespace,
@@ -54,9 +64,12 @@ def process_pipelinerun() -> Any:
             "pipelinerun_name": pipelinerun.pipelinerun_name,
             "duration": duration,
             "namespace": pipelinerun.namespace,
+            "metrics": "accepted",
         }
     )
 
 
 # Makes Prometheus metrics available on /metrics endpoint
-app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
+app.wsgi_app = DispatcherMiddleware(  # type: ignore[method-assign]
+    app.wsgi_app, {"/metrics": make_wsgi_app()}
+)
