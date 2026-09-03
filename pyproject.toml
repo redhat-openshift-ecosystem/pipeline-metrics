@@ -14,7 +14,7 @@ dependencies = [
     "prometheus-client>=0.26.0,<0.27.0",
     "python-dateutil>=2.9.0.post0,<3.0.0",
     "pyyaml>=6.0.3,<7.0.0",
-    "operatorcert @ git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git",
+    "operatorcert @ git+https://github.com/redhat-openshift-ecosystem/operator-pipelines.git@cf75c107ed9d9ce133b978c3ab206523f78c9d0e",
     "pydantic>=2.13.4,<3.0.0",
 ]
 
