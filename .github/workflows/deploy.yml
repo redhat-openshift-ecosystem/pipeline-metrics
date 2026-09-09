@@ -9,9 +9,6 @@ on:  # yamllint disable-line rule:truthy
       - main
     types:
       - completed
-  # push:
-  #   branches:
-  #     - ISV-1691
   workflow_dispatch:
 
 jobs:
