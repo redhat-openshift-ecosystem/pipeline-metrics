@@ -11,6 +11,7 @@ bind = "0.0.0.0:8080"
 workers = 1
 timeout = 900
 accesslog = "-"
+control_socket_disable = True
 
 _stop_event = Event()
 _threads: list[Scraper] = []

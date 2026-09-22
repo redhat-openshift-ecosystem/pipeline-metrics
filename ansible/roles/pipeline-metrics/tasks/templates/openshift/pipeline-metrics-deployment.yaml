@@ -22,6 +22,10 @@ spec:
       name: "{{ pipeline_metrics_name }}-{{ suffix }}"
     spec:
       serviceAccountName: "{{ service_account_name }}"
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
         - name: operator-repos-config
           configMap:
@@ -32,9 +36,18 @@ spec:
         - name: cookie-secret
           secret:
             secretName: "{{ pipeline_metrics_cookie_secret_name }}"
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: "{{ pipeline_metrics_name }}"
           image: "{{ pipeline_metrics_image_pull_spec }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: {{ pipeline_metrics_name_port | int }}  # yamllint disable-line rule:braces
               protocol: TCP
@@ -42,6 +55,8 @@ spec:
             - name: operator-repos-config
               mountPath: /etc/metrics-conf/
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: METRICS_OPERATOR_REPOS_CFG_PATH
               value: /etc/metrics-conf/repos.yml
@@ -69,6 +84,13 @@ spec:
               memory: 1Gi
         - name: oauth-proxy
           image: "{{ pipeline_metrics_oauth_proxy_image }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: {{ pipeline_metrics_oauth_proxy_port | int }}  # yamllint disable-line rule:braces
               name: https
