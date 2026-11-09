@@ -1,5 +1,5 @@
 # fedora:44
-FROM quay.io/fedora/fedora:44
+FROM quay.io/fedora/fedora:45
 
 LABEL description="Tekton metrics collector"
 LABEL summary="A service that collects a metrics form Tekton pipelines."
